@@ -12,15 +12,18 @@ counter = 0
 reference_img=cv2.imread("sarthak-portfolio.png")
 face_match=False
 
+lock = threading.Lock()
 def check_face(frame):
     global face_match
     try:
-        if DeepFace.verify(frame,reference_img.copy())['verified']:
-            face_match = True
-        else:
-            face_match = False
+        with lock:
+            if DeepFace.verify(frame,reference_img.copy())['verified']:
+                face_match = True
+            else:
+                face_match = False
     except ValueError:
-            face_match = False
+         with lock:
+          face_match = False
 
 while True:
     ret,frame =cap.read()
@@ -31,12 +34,12 @@ while True:
             except ValueError:
                 pass
         counter +=1
+        with lock:
+            if face_match:
+                cv2.putText(frame, "MATCH",(20,450), cv2.FONT_HERSHEY_SIMPLEX,2,(0,255,0),3)
 
-        if face_match:
-            cv2.putText(frame, "MATCH",(20,450), cv2.FONT_HERSHEY_SIMPLEX,2,(0,255,0),3)
-
-        else:
-            cv2.putText(frame, "NO MATCH", (20, 450), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 3)
+            else:
+                cv2.putText(frame, "NO MATCH", (20, 450), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 3)
 
 
         cv2.imshow("video", frame)
